@@ -1,0 +1,67 @@
+#include <iostream>
+#include <stack>
+#include <cctype>
+using namespace std;
+
+struct Node {
+    char data;
+    Node *left, *right;
+    Node(char c) : data(c), left(nullptr), right(nullptr) {}
+};
+
+Node* buildTree(const string& pre) {
+    stack<Node*> s;
+    for (int i = pre.size()-1; i >= 0; i--) {
+        char c = pre[i];
+        Node* n = new Node(c);
+        if (!isalpha(c)) {
+            n->left = s.top(); s.pop();
+            n->right = s.top(); s.pop();
+        }
+        s.push(n);
+    }
+    return s.top();
+}
+
+void postOrder(Node* root) {
+    stack<Node*> s1, s2;
+    s1.push(root);
+    while (!s1.empty()) {
+        Node* curr = s1.top(); s1.pop();
+        s2.push(curr);
+        if (curr->left) s1.push(curr->left);
+        if (curr->right) s1.push(curr->right);
+    }
+    while (!s2.empty()) {
+        cout << s2.top()->data << " ";
+        s2.pop();
+    }
+}
+
+void deleteTree(Node* root) {
+    stack<Node*> s;
+    Node *curr = root, *last = nullptr;
+    while (!s.empty() || curr) {
+        if (curr) {
+            s.push(curr);
+            curr = curr->left;
+        } else {
+            Node* top = s.top();
+            if (top->right && last != top->right) {
+                curr = top->right;
+            } else {
+                last = top;
+                delete top;
+                s.pop();
+            }
+        }
+    }
+}
+
+int main() {
+    string prefix = "+--a*bc/def";
+    Node* root = buildTree(prefix);
+    postOrder(root);
+    deleteTree(root);
+    return 0;
+}
