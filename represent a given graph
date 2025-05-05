@@ -1,0 +1,95 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <stack>
+using namespace std;
+
+// Landmark names directly mapped to indices
+const vector<string> landmarks = {
+    "Main Gate", "Library", "Cafeteria", 
+    "Admin Block", "Sports Complex", "Hostel",
+    "Parking Lot", "Auditorium"
+};
+
+class CollegeGraph {
+    vector<vector<bool>> adjMatrix;
+    vector<vector<int>> adjList;
+    int size;
+    
+public:
+    CollegeGraph(int n) : size(n), 
+        adjMatrix(n, vector<bool>(n, false)),
+        adjList(n) {}
+    
+    void connect(int u, int v) {
+        adjMatrix[u][v] = adjMatrix[v][u] = true;
+        adjList[u].push_back(v);
+        adjList[v].push_back(u);
+    }
+    
+    void showDFS(int start) {
+        vector<bool> visited(size, false);
+        stack<int> s;
+        s.push(start);
+        
+        cout << "DFS: ";
+        while (!s.empty()) {
+            int current = s.top();
+            s.pop();
+            
+            if (visited[current]) continue;
+            visited[current] = true;
+            cout << landmarks[current] << " -> ";
+            
+            for (int i = size-1; i >= 0; i--) {
+                if (adjMatrix[current][i] && !visited[i]) {
+                    s.push(i);
+                }
+            }
+        }
+        cout << "END\n";
+    }
+    
+    void showBFS(int start) {
+        vector<bool> visited(size, false);
+        queue<int> q;
+        q.push(start);
+        visited[start] = true;
+        
+        cout << "BFS: ";
+        while (!q.empty()) {
+            int current = q.front();
+            q.pop();
+            cout << landmarks[current] << " -> ";
+            
+            for (int neighbor : adjList[current]) {
+                if (!visited[neighbor]) {
+                    visited[neighbor] = true;
+                    q.push(neighbor);
+                }
+            }
+        }
+        cout << "END\n";
+    }
+};
+
+int main() {
+    CollegeGraph campus(8);
+    
+    // Connect landmarks
+    campus.connect(0, 1); // Main Gate - Library
+    campus.connect(0, 6); // Main Gate - Parking
+    campus.connect(1, 2); // Library - Cafeteria
+    campus.connect(1, 3); // Library - Admin
+    campus.connect(2, 4); // Cafeteria - Sports
+    campus.connect(3, 7); // Admin - Auditorium
+    campus.connect(4, 5); // Sports - Hostel
+    campus.connect(5, 6); // Hostel - Parking
+    campus.connect(7, 5); // Auditorium - Hostel
+    
+    // Perform traversals
+    campus.showDFS(0);
+    campus.showBFS(0);
+    
+    return 0;
+}
