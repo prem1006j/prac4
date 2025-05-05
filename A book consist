@@ -1,0 +1,71 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+class TreeNode {
+public:
+    std::string name;
+    std::vector<TreeNode*> children;
+
+    TreeNode(const std::string& nodeName) : name(nodeName) {}
+
+    void addChild(TreeNode* child) {
+        children.push_back(child);
+    }
+
+    void printTree(int level = 0) const {
+        std::string indentation(level * 2, ' ');
+        std::cout << indentation << name << std::endl;
+        for (const auto& child : children) {
+            child->printTree(level + 1);
+        }
+    }
+
+    ~TreeNode() {
+        for (auto& child : children) {
+            delete child;
+        }
+    }
+};
+
+int main() {
+    // Create the book tree structure
+    TreeNode* book = new TreeNode("Book");
+    
+    // Chapter 1
+    TreeNode* chapter1 = new TreeNode("Chapter 1");
+    book->addChild(chapter1);
+    
+    TreeNode* section11 = new TreeNode("Section 1.1");
+    chapter1->addChild(section11);
+    section11->addChild(new TreeNode("Subsection 1.1.1"));
+    section11->addChild(new TreeNode("Subsection 1.1.2"));
+    
+    TreeNode* section12 = new TreeNode("Section 1.2");
+    chapter1->addChild(section12);
+    section12->addChild(new TreeNode("Subsection 1.2.1"));
+    
+    // Chapter 2
+    TreeNode* chapter2 = new TreeNode("Chapter 2");
+    book->addChild(chapter2);
+    
+    chapter2->addChild(new TreeNode("Section 2.1"));
+    
+    TreeNode* section22 = new TreeNode("Section 2.2");
+    chapter2->addChild(section22);
+    section22->addChild(new TreeNode("Subsection 2.2.1"));
+    section22->addChild(new TreeNode("Subsection 2.2.2"));
+    
+    // Chapter 3
+    TreeNode* chapter3 = new TreeNode("Chapter 3");
+    book->addChild(chapter3);
+    chapter3->addChild(new TreeNode("Section 3.1"));
+    
+    // Print the tree
+    book->printTree();
+    
+    // Clean up memory
+    delete book;
+    
+    return 0;
+}
