@@ -1,0 +1,166 @@
+#include <iostream>
+#include <algorithm> // for max function
+
+using namespace std;
+
+// TreeNode structure
+struct TreeNode {
+    int data;
+    TreeNode* left;
+    TreeNode* right;
+    
+    TreeNode(int val) : data(val), left(nullptr), right(nullptr) {}
+};
+
+// BST class
+class BST {
+private:
+    TreeNode* root;
+    
+    // Helper functions
+    TreeNode* insertHelper(TreeNode* node, int val) {
+        if (node == nullptr) {
+            return new TreeNode(val);
+        }
+        
+        if (val < node->data) {
+            node->left = insertHelper(node->left, val);
+        } else if (val > node->data) {
+            node->right = insertHelper(node->right, val);
+        }
+        
+        return node;
+    }
+    
+    int longestPathHelper(TreeNode* node) {
+        if (node == nullptr) return 0;
+        return 1 + max(longestPathHelper(node->left), longestPathHelper(node->right));
+    }
+    
+    int findMinHelper(TreeNode* node) {
+        if (node == nullptr) {
+            cerr << "Tree is empty!" << endl;
+            return -1;
+        }
+        while (node->left != nullptr) {
+            node = node->left;
+        }
+        return node->data;
+    }
+    
+    TreeNode* swapPointersHelper(TreeNode* node) {
+        if (node == nullptr) return nullptr;
+        
+        // Swap left and right pointers
+        TreeNode* temp = node->left;
+        node->left = swapPointersHelper(node->right);
+        node->right = swapPointersHelper(temp);
+        
+        return node;
+    }
+    
+    bool searchHelper(TreeNode* node, int val) {
+        if (node == nullptr) return false;
+        if (node->data == val) return true;
+        if (val < node->data) return searchHelper(node->left, val);
+        return searchHelper(node->right, val);
+    }
+    
+    void inorderHelper(TreeNode* node) {
+        if (node == nullptr) return;
+        inorderHelper(node->left);
+        cout << node->data << " ";
+        inorderHelper(node->right);
+    }
+    
+public:
+    BST() : root(nullptr) {}
+    
+    // Insert a new value
+    void insert(int val) {
+        root = insertHelper(root, val);
+    }
+    
+    // Find number of nodes in longest path from root
+    int longestPath() {
+        return longestPathHelper(root);
+    }
+    
+    // Find minimum value in the tree
+    int findMin() {
+        return findMinHelper(root);
+    }
+    
+    // Swap left and right pointers at every node
+    void swapPointers() {
+        root = swapPointersHelper(root);
+    }
+    
+    // Search for a value
+    bool search(int val) {
+        return searchHelper(root, val);
+    }
+    
+    // Print tree (inorder traversal)
+    void print() {
+        cout << "Inorder traversal: ";
+        inorderHelper(root);
+        cout << endl;
+    }
+};
+
+int main() {
+    BST tree;
+    
+    // Construct the BST with given values
+    int values[] = {50, 30, 70, 20, 40, 60, 80};
+    int n = sizeof(values)/sizeof(values[0]);
+    
+    for (int i = 0; i < n; i++) {
+        tree.insert(values[i]);
+    }
+    
+    cout << "Initial tree:" << endl;
+    tree.print();
+    
+    // i. Insert new node
+    cout << "\nInserting 35..." << endl;
+    tree.insert(35);
+    tree.print();
+    
+    // ii. Find number of nodes in longest path from root
+    cout << "\nNumber of nodes in longest path from root: " 
+         << tree.longestPath() << endl;
+    
+    // iii. Minimum data value found in the tree
+    cout << "Minimum value in the tree: " << tree.findMin() << endl;
+    
+    // iv. Swap left and right pointers
+    cout << "\nSwapping left and right pointers..." << endl;
+    tree.swapPointers();
+    tree.print();
+    
+    // Swap back to original structure
+    cout << "Swapping back to original..." << endl;
+    tree.swapPointers();
+    tree.print();
+    
+    // v. Search a value
+    int searchVal = 40;
+    cout << "\nSearching for " << searchVal << ": ";
+    if (tree.search(searchVal)) {
+        cout << "Found" << endl;
+    } else {
+        cout << "Not found" << endl;
+    }
+    
+    searchVal = 45;
+    cout << "Searching for " << searchVal << ": ";
+    if (tree.search(searchVal)) {
+        cout << "Found" << endl;
+    } else {
+        cout << "Not found" << endl;
+    }
+    
+    return 0;
+}
