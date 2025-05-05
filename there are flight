@@ -1,0 +1,80 @@
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <string>
+#include <stack>
+using namespace std;
+
+class Graph {
+private:
+    unordered_map<string, vector<pair<string, int>>> adjList;
+
+    void dfs(const string& city, unordered_map<string, bool>& visited) {
+        stack<string> s;
+        s.push(city);
+
+        while (!s.empty()) {
+            string current = s.top();
+            s.pop();
+            if (!visited[current]) {
+                visited[current] = true;
+                for (auto& neighbor : adjList[current]) {
+                    if (!visited[neighbor.first]) {
+                        s.push(neighbor.first);
+                    }
+                }
+            }
+        }
+    }
+
+public:
+    void addFlight(const string& from, const string& to, int cost) {
+        adjList[from].emplace_back(to, cost);
+        adjList[to].emplace_back(from, cost); // Assuming undirected graph
+    }
+
+    bool isConnected() {
+        if (adjList.empty()) return true;
+
+        unordered_map<string, bool> visited;
+        for (auto& pair : adjList)
+            visited[pair.first] = false;
+
+        dfs(adjList.begin()->first, visited);
+
+        for (auto& pair : visited) {
+            if (!pair.second) return false;
+        }
+        return true;
+    }
+
+    void display() {
+        for (auto& city : adjList) {
+            cout << city.first << " -> ";
+            for (auto& neighbor : city.second) {
+                cout << "(" << neighbor.first << ", cost: " << neighbor.second << ") ";
+            }
+            cout << "\n";
+        }
+    }
+};
+
+// Sample usage
+int main() {
+    Graph flightGraph;
+    flightGraph.addFlight("Delhi", "Mumbai", 150);
+    flightGraph.addFlight("Delhi", "Kolkata", 200);
+    flightGraph.addFlight("Mumbai", "Chennai", 180);
+    flightGraph.addFlight("Chennai", "Kolkata", 220);
+
+    cout << "Flight Routes:\n";
+    flightGraph.display();
+
+    if (flightGraph.isConnected()) {
+        cout << "\nThe flight network is connected.\n";
+    } else {
+        cout << "\nThe flight network is NOT connected.\n";
+    }
+
+    return 0;
+}
