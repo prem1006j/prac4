@@ -1,0 +1,197 @@
+#include <iostream>
+#include <string>
+#include <algorithm>
+using namespace std;
+
+struct Node {
+    string keyword, meaning;
+    Node* left;
+    Node* right;
+    int height;
+
+    Node(string key, string mean) : keyword(key), meaning(mean), left(nullptr), right(nullptr), height(1) {}
+};
+
+int height(Node* n) {
+    return n ? n->height : 0;
+}
+
+int getBalance(Node* n) {
+    return n ? height(n->left) - height(n->right) : 0;
+}
+
+Node* rightRotate(Node* y) {
+    Node* x = y->left;
+    Node* T2 = x->right;
+    x->right = y;
+    y->left = T2;
+    y->height = 1 + max(height(y->left), height(y->right));
+    x->height = 1 + max(height(x->left), height(x->right));
+    return x;
+}
+
+Node* leftRotate(Node* x) {
+    Node* y = x->right;
+    Node* T2 = y->left;
+    y->left = x;
+    x->right = T2;
+    x->height = 1 + max(height(x->left), height(x->right));
+    y->height = 1 + max(height(y->left), height(y->right));
+    return y;
+}
+
+Node* insert(Node* root, string key, string meaning) {
+    if (!root) return new Node(key, meaning);
+    if (key < root->keyword)
+        root->left = insert(root->left, key, meaning);
+    else if (key > root->keyword)
+        root->right = insert(root->right, key, meaning);
+    else {
+        root->meaning = meaning; // Update if key exists
+        return root;
+    }
+
+    root->height = 1 + max(height(root->left), height(root->right));
+    int balance = getBalance(root);
+
+    // Balance cases
+    if (balance > 1 && key < root->left->keyword)
+        return rightRotate(root);
+    if (balance < -1 && key > root->right->keyword)
+        return leftRotate(root);
+    if (balance > 1 && key > root->left->keyword) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+    if (balance < -1 && key < root->right->keyword) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+
+    return root;
+}
+
+Node* minValueNode(Node* root) {
+    Node* curr = root;
+    while (curr->left)
+        curr = curr->left;
+    return curr;
+}
+
+Node* deleteNode(Node* root, string key) {
+    if (!root) return root;
+    if (key < root->keyword)
+        root->left = deleteNode(root->left, key);
+    else if (key > root->keyword)
+        root->right = deleteNode(root->right, key);
+    else {
+        if (!root->left || !root->right) {
+            Node* temp = root->left ? root->left : root->right;
+            if (!temp)
+                root = nullptr;
+            else
+                *root = *temp;
+            delete temp;
+        } else {
+            Node* temp = minValueNode(root->right);
+            root->keyword = temp->keyword;
+            root->meaning = temp->meaning;
+            root->right = deleteNode(root->right, temp->keyword);
+        }
+    }
+
+    if (!root) return root;
+
+    root->height = 1 + max(height(root->left), height(root->right));
+    int balance = getBalance(root);
+
+    // Balance cases
+    if (balance > 1 && getBalance(root->left) >= 0)
+        return rightRotate(root);
+    if (balance > 1 && getBalance(root->left) < 0) {
+        root->left = leftRotate(root->left);
+        return rightRotate(root);
+    }
+    if (balance < -1 && getBalance(root->right) <= 0)
+        return leftRotate(root);
+    if (balance < -1 && getBalance(root->right) > 0) {
+        root->right = rightRotate(root->right);
+        return leftRotate(root);
+    }
+
+    return root;
+}
+
+Node* search(Node* root, string key, int& comparisons) {
+    comparisons++;
+    if (!root || root->keyword == key)
+        return root;
+    if (key < root->keyword)
+        return search(root->left, key, comparisons);
+    return search(root->right, key, comparisons);
+}
+
+void inorder(Node* root) {
+    if (root) {
+        inorder(root->left);
+        cout << root->keyword << " : " << root->meaning << endl;
+        inorder(root->right);
+    }
+}
+
+void reverseInorder(Node* root) {
+    if (root) {
+        reverseInorder(root->right);
+        cout << root->keyword << " : " << root->meaning << endl;
+        reverseInorder(root->left);
+    }
+}
+
+int main() {
+    Node* root = nullptr;
+    int choice;
+    string key, meaning;
+
+    do {
+        cout << "\n--- Dictionary Menu ---\n";
+        cout << "1. Insert\n2. Delete\n3. Update\n4. Search\n5. Display Ascending\n6. Display Descending\n7. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                cout << "Enter keyword: "; cin >> key;
+                cout << "Enter meaning: "; cin.ignore(); getline(cin, meaning);
+                root = insert(root, key, meaning);
+                break;
+            case 2:
+                cout << "Enter keyword to delete: "; cin >> key;
+                root = deleteNode(root, key);
+                break;
+            case 3:
+                cout << "Enter keyword to update: "; cin >> key;
+                cout << "Enter new meaning: "; cin.ignore(); getline(cin, meaning);
+                root = insert(root, key, meaning); // insert updates if exists
+                break;
+            case 4: {
+                cout << "Enter keyword to search: "; cin >> key;
+                int comparisons = 0;
+                Node* result = search(root, key, comparisons);
+                if (result)
+                    cout << "Found: " << result->keyword << " = " << result->meaning << "\nComparisons: " << comparisons << endl;
+                else
+                    cout << "Keyword not found.\nComparisons: " << comparisons << endl;
+                break;
+            }
+            case 5:
+                cout << "\n--- Dictionary in Ascending Order ---\n";
+                inorder(root);
+                break;
+            case 6:
+                cout << "\n--- Dictionary in Descending Order ---\n";
+                reverseInorder(root);
+                break;
+        }
+    } while (choice != 7);
+
+    return 0;
+}
