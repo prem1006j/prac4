@@ -1,0 +1,142 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Employee {
+    int id;
+    string name;
+    string designation;
+    float salary;
+};
+
+struct IndexEntry {
+    int id;
+    streampos position;
+
+    bool operator<(const IndexEntry& other) const {
+        return id < other.id;
+    }
+};
+
+vector<IndexEntry> indexTable;
+
+void buildIndex() {
+    indexTable.clear();
+    ifstream fin("employees.dat", ios::binary);
+    Employee e;
+    while (fin) {
+        streampos pos = fin.tellg();
+        fin.read(reinterpret_cast<char*>(&e), sizeof(Employee));
+        if (fin && e.id != -1)  // -1 indicates deleted record
+            indexTable.push_back({e.id, pos});
+    }
+    sort(indexTable.begin(), indexTable.end());
+    fin.close();
+}
+
+void addEmployee() {
+    Employee e;
+    cout << "Enter ID: "; cin >> e.id;
+    cout << "Enter Name: "; cin.ignore(); getline(cin, e.name);
+    cout << "Enter Designation: "; getline(cin, e.designation);
+    cout << "Enter Salary: "; cin >> e.salary;
+
+    ofstream fout("employees.dat", ios::binary | ios::app);
+    fout.write(reinterpret_cast<char*>(&e), sizeof(Employee));
+    fout.close();
+
+    buildIndex();
+    cout << "Employee added.\n";
+}
+
+int binarySearch(int id) {
+    int low = 0, high = indexTable.size() - 1;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        if (indexTable[mid].id == id)
+            return mid;
+        else if (indexTable[mid].id < id)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+    return -1;
+}
+
+void displayEmployee() {
+    int id;
+    cout << "Enter Employee ID to search: ";
+    cin >> id;
+    int pos = binarySearch(id);
+    if (pos == -1) {
+        cout << "Employee not found.\n";
+        return;
+    }
+
+    ifstream fin("employees.dat", ios::binary);
+    fin.seekg(indexTable[pos].position);
+    Employee e;
+    fin.read(reinterpret_cast<char*>(&e), sizeof(Employee));
+    fin.close();
+
+    cout << "Employee Found:\n";
+    cout << "ID: " << e.id << "\n";
+    cout << "Name: " << e.name << "\n";
+    cout << "Designation: " << e.designation << "\n";
+    cout << "Salary: " << e.salary << "\n";
+}
+
+void deleteEmployee() {
+    int id;
+    cout << "Enter Employee ID to delete: ";
+    cin >> id;
+    int pos = binarySearch(id);
+    if (pos == -1) {
+        cout << "Employee not found.\n";
+        return;
+    }
+
+    fstream file("employees.dat", ios::binary | ios::in | ios::out);
+    file.seekp(indexTable[pos].position);
+    Employee e;
+    file.read(reinterpret_cast<char*>(&e), sizeof(Employee));
+
+    e.id = -1;  // mark as deleted
+    file.seekp(indexTable[pos].position);
+    file.write(reinterpret_cast<char*>(&e), sizeof(Employee));
+    file.close();
+
+    buildIndex();
+    cout << "Employee deleted.\n";
+}
+
+void displayAll() {
+    ifstream fin("employees.dat", ios::binary);
+    Employee e;
+    cout << "\n--- All Employees ---\n";
+    while (fin.read(reinterpret_cast<char*>(&e), sizeof(Employee))) {
+        if (e.id == -1) continue; // skip deleted
+        cout << "ID: " << e.id << ", Name: " << e.name << ", Designation: " << e.designation << ", Salary: " << e.salary << "\n";
+    }
+    fin.close();
+}
+
+int main() {
+    buildIndex();
+    int choice;
+    do {
+        cout << "\n--- Employee Record System ---\n";
+        cout << "1. Add Employee\n2. Display Employee\n3. Delete Employee\n4. Display All\n5. Exit\nEnter choice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1: addEmployee(); break;
+            case 2: displayEmployee(); break;
+            case 3: deleteEmployee(); break;
+            case 4: displayAll(); break;
+        }
+    } while (choice != 5);
+
+    return 0;
+}
