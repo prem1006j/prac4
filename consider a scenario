@@ -1,0 +1,100 @@
+#include <iostream>
+#include <queue>
+#include <string>
+using namespace std;
+
+enum Priority { GENERAL = 1, NON_SERIOUS = 2, SERIOUS = 3 };
+
+struct Patient {
+    string name;
+    int age;
+    Priority priority;
+
+    Patient(string n, int a, Priority p) : name(n), age(a), priority(p) {}
+};
+
+queue<Patient> queue_serious;
+queue<Patient> queue_nonserious;
+queue<Patient> queue_general;
+
+void addPatient(string name, int age, Priority priority) {
+    Patient p(name, age, priority);
+    if (priority == SERIOUS)
+        queue_serious.push(p);
+    else if (priority == NON_SERIOUS)
+        queue_nonserious.push(p);
+    else
+        queue_general.push(p);
+}
+
+void servePatient() {
+    if (!queue_serious.empty()) {
+        Patient p = queue_serious.front();
+        queue_serious.pop();
+        cout << "Serving Serious Patient: " << p.name << " (Age: " << p.age << ")\n";
+    } else if (!queue_nonserious.empty()) {
+        Patient p = queue_nonserious.front();
+        queue_nonserious.pop();
+        cout << "Serving Non-Serious Patient: " << p.name << " (Age: " << p.age << ")\n";
+    } else if (!queue_general.empty()) {
+        Patient p = queue_general.front();
+        queue_general.pop();
+        cout << "Serving General Checkup Patient: " << p.name << " (Age: " << p.age << ")\n";
+    } else {
+        cout << "No patients in the queue.\n";
+    }
+}
+
+void displayQueue() {
+    cout << "\n--- Serious Patients ---\n";
+    queue<Patient> temp = queue_serious;
+    while (!temp.empty()) {
+        Patient p = temp.front(); temp.pop();
+        cout << p.name << " (Age: " << p.age << ")\n";
+    }
+
+    cout << "\n--- Non-Serious Patients ---\n";
+    temp = queue_nonserious;
+    while (!temp.empty()) {
+        Patient p = temp.front(); temp.pop();
+        cout << p.name << " (Age: " << p.age << ")\n";
+    }
+
+    cout << "\n--- General Checkup Patients ---\n";
+    temp = queue_general;
+    while (!temp.empty()) {
+        Patient p = temp.front(); temp.pop();
+        cout << p.name << " (Age: " << p.age << ")\n";
+    }
+}
+
+int main() {
+    int choice;
+    string name;
+    int age, p;
+
+    do {
+        cout << "\n--- Hospital Queue System ---\n";
+        cout << "1. Add Patient\n2. Serve Patient\n3. Display Queue\n4. Exit\nEnter choice: ";
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                cout << "Enter patient name: ";
+                cin >> name;
+                cout << "Enter age: ";
+                cin >> age;
+                cout << "Enter priority (3=Serious, 2=Non-Serious, 1=General): ";
+                cin >> p;
+                addPatient(name, age, static_cast<Priority>(p));
+                break;
+            case 2:
+                servePatient();
+                break;
+            case 3:
+                displayQueue();
+                break;
+        }
+    } while (choice != 4);
+
+    return 0;
+}
