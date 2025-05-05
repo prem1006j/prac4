@@ -1,0 +1,42 @@
+#include <iostream>
+#include <vector>
+#include <limits>
+using namespace std;
+
+float optimalBST(const vector<float>& p, int n) {
+    vector<vector<float>> cost(n, vector<float>(n, 0));
+    vector<vector<float>> sum(n, vector<float>(n, 0));
+
+    // Initialize cost and sum for one key
+    for (int i = 0; i < n; ++i) {
+        cost[i][i] = p[i];
+        sum[i][i] = p[i];
+    }
+
+    // Build the table
+    for (int L = 2; L <= n; ++L) { // L is chain length
+        for (int i = 0; i <= n - L; ++i) {
+            int j = i + L - 1;
+            cost[i][j] = numeric_limits<float>::max();
+            sum[i][j] = sum[i][j - 1] + p[j];
+
+            // Try making each key in interval root
+            for (int r = i; r <= j; ++r) {
+                float leftCost = (r > i) ? cost[i][r - 1] : 0;
+                float rightCost = (r < j) ? cost[r + 1][j] : 0;
+                float total = leftCost + rightCost + sum[i][j];
+                if (total < cost[i][j])
+                    cost[i][j] = total;
+            }
+        }
+    }
+
+    return cost[0][n - 1];
+}
+
+int main() {
+    vector<float> p = {0.05, 0.4, 0.08, 0.04, 0.1}; // example probabilities
+    int n = p.size();
+    cout << "Minimum expected search cost: " << optimalBST(p, n) << endl;
+    return 0;
+}
